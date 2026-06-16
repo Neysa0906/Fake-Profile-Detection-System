@@ -1,0 +1,123 @@
+import pandas as pd import numpy as np import pickle
+from sklearn.model_selection import train_test_split from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+# Load dataset
+data = pd.read_csv("dataset.csv")
+# Features and target
+X = data[["followers", "following", "posts", "bio_length", "account_age"]] y = data["is_fake"] # 0 = real, 1 = fake
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.2, random_state=42, stratify=y
+)
+# Model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+# Train
+model.fit(X_train, y_train)
+# Predictions
+y_pred = model.predict(X_test)
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print("Model Accuracy:", round(accuracy * 100, 2), "%")
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred) print("\nConfusion Matrix:")
+print(cm)
+# Save model
+pickle.dump(model, open("model.pkl", "wb")) print("\nModel trained and saved successfully!")
+import streamlit as st
+import pickle
+import pandas as pd
+
+# Load model
+model = pickle.load(open("model.pkl", "rb"))
+
+# Page config
+st.set_page_config(page_title="Fake Profile Detector", layout="centered")
+
+# Title
+st.title("🤖 AI Fake Profile Detection System")
+
+st.markdown("### Enter Profile Details")
+
+# Username
+username = st.text_input("Username")
+
+# Platform selector
+platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "Facebook"])
+
+# Inputs
+col1, col2 = st.columns(2)
+
+with col1:
+    followers = st.number_input("Followers", min_value=0)
+    posts = st.number_input("Posts", min_value=0)
+    bio = st.number_input("Bio Length", min_value=0)
+
+with col2:
+    following = st.number_input("Following", min_value=0)
+    age = st.number_input("Account Age (days)", min_value=0)
+
+# Button
+if st.button("Check Profile"):
+    try:
+        features = pd.DataFrame([[followers, following, posts, bio, age]],
+                                columns=["followers", "following", "posts", "bio_length", "account_age"])
+
+        result = model.predict(features)[0]
+        prob = model.predict_proba(features)[0]
+        confidence = max(prob) * 100
+
+        st.markdown("---")
+
+        if result == 1:
+            st.error(f" {username} ({platform}) is a Fake Profile\n\nConfidence: {confidence:.2f}%")
+        else:
+            st.success(f" {username} ({platform}) is a Real Profile\n\nConfidence: {confidence:.2f}%")
+
+    except:
+        st.warning(" Please enter all values correctly")
+
+# Footer
+st.markdown("---")
+st.caption("AI-based Fake Profile Detection System using Machine Learning")
+import pandas as pd
+import numpy as np
+import pickle
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load dataset
+data = pd.read_csv("dataset.csv")
+
+# Features and target
+X = data[["followers", "following", "posts", "bio_length", "account_age"]]
+y = data["is_fake"]   # 0 = real, 1 = fake
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print("Model Accuracy:", round(accuracy * 100, 2), "%")
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(cm)
+
+# Save model
+pickle.dump(model, open("model.pkl", "wb"))
+
+print("\nModel trained and saved successfully!")
+
